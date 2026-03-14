@@ -1,473 +1,344 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Формулы - Шпаргалка</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Плеер</title>
+    <style>
+        /* Базовые настройки и цвета (темная тема) */
+        :root {
+            --primary: #1db954; /* Зеленый акцент */
+            --bg: #121212;
+            --panel: #181818;
+            --text: #ffffff;
+            --text-secondary: #b3b3b3;
+        }
 
-<script>
-  MathJax = {
-    tex: {
-      inlineMath: [['$', '$'], ['\\(', '\\)']],
-      displayMath: [['$$', '$$'], ['\\[', '\\]']]
-    }
-  };
-</script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-<style>
-  body {
-    background-color: #525659;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-  }
-  .page {
-    background-color: white;
-    width: 297mm; /* Альбомная ориентация (Ширина стала больше) */
-    min-height: 210mm; /* Высота стала меньше */
-    margin: 0 auto 20px auto;
-    padding: 15mm;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    box-sizing: border-box;
-    /* Разбиваем текст на 2 колонки */
-    column-count: 2;
-    column-gap: 15mm; /* Увеличили расстояние между колонками */
-    column-rule: 1px solid #ccc;
-  }
-  .header {
-    column-span: all;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    border-bottom: 2px solid black;
-    margin-bottom: 15px;
-    padding-bottom: 5px;
-  }
-  h2 {
-    font-size: 14px;
-    color: #000;
-    background-color: #f0f0f0;
-    padding: 5px;
-    margin-top: 0;
-    text-align: center;
-    break-after: avoid;
-  }
-  p {
-    font-size: 13px;
-    line-height: 1.5;
-    margin: 5px 0 15px 0;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-    font-size: 12px;
-  }
-  th, td {
-    border: 1px solid #000;
-    padding: 4px;
-    text-align: center;
-  }
-  ul {
-    margin: 5px 0 15px 0;
-    padding-left: 20px;
-    font-size: 13px;
-  }
-  li {
-    margin-bottom: 5px;
-  }
-  .formula-group {
-    margin-bottom: 15px;
-    break-inside: avoid; /* Чтобы формулы не разрывались между колонками */
-    overflow-x: auto; /* Позволяет прокручивать слишком длинные формулы, чтобы они не накладывались */
-    padding-bottom: 5px;
-  }
-  
-  /* Стили для печати: гарантируют, что принтер тоже распечатает в альбомном формате */
-  @media print {
-    @page {
-      size: A4 landscape;
-      margin: 0;
-    }
-    body {
-      background-color: transparent;
-      padding: 0;
-    }
-    .page {
-      box-shadow: none;
-      margin: 0;
-      width: 100%;
-      min-height: 100%;
-    }
-  }
-</style>
+        /* Контейнер плеера */
+        .player-container {
+            background-color: var(--panel);
+            width: 350px;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Обложка */
+        .art {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #2b2b2b, #404040);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+        
+        .art.playing {
+            transform: scale(1.02);
+            background: linear-gradient(135deg, #1db954, #127334);
+        }
+
+        /* Информация о треке */
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Полоса прокрутки (прогресс-бар) */
+        .progress-container {
+            background: #404040;
+            border-radius: 5px;
+            height: 6px;
+            width: 100%;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .progress {
+            background: var(--primary);
+            height: 100%;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* Кнопки управления */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        button:hover {
+            color: var(--text);
+        }
+
+        .play-btn {
+            background: var(--text);
+            color: var(--bg);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            padding-left: 4px; /* Визуальное выравнивание треугольника */
+        }
+
+        .play-btn:hover {
+            background: var(--primary);
+            color: var(--bg);
+            transform: scale(1.05);
+        }
+
+        /* Список плейлиста */
+        .playlist-container {
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+            scroll-behavior: smooth;
+        }
+
+        /* Стилизация скроллбара */
+        .playlist-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .playlist-container::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+
+        .playlist-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            transition: background 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-item:hover {
+            background: #2a2a2a;
+            color: var(--text);
+        }
+
+        .playlist-item.active {
+            color: var(--primary);
+            background: #2a2a2a;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-<div class="page">
-  <div class="header">Matematika fanidan asosiy formulalar / Основные формулы математики</div>
+    <div class="player-container">
+        <div class="art" id="art">🎵</div>
+        <div class="info">
+            <p class="title" id="title">Трек не выбран</p>
+        </div>
 
-  <div class="formula-group">
-    <h2>Tenglamalar / Уравнения</h2>
-    <p>
-      $ax^{2}+bx+c=0;$<br>
-      $x_{1,2}=\frac{-b\pm\sqrt{b^{2}-4ac}}{2a};$<br>
-      $\begin{cases}x_{1}+x_{2}=-\frac{b}{a}\\ x_{1}\cdot x_{2}=\frac{c}{a},\end{cases}$<br>
-      $|f(x)|+|g(x)|=|f(x)+g(x)|\Rightarrow f(x)\cdot g(x)\ge0;$<br>
-      $\frac{Ax}{ax^{2}\pm bx+c}\pm\frac{Bx}{ax^{2}\pm dx+c}=k\Rightarrow\frac{A}{ax+\frac{c}{x}\pm b}\pm\frac{B}{ax+\frac{c}{x}\pm d}=k;$<br>
-      $ax+\frac{c}{x}=z$ (o'zgaruvchi kiritib yechiladi / решается с помощью замены)<br>
-      $(x-a)(x-b)(x-c)(x-d)=A\Rightarrow a+b=c+d$ bo'lsa, $t=x^{2}-(a+b)x$ (o'zgaruvchi kiritib yechiladi / решается с помощью замены)
-    </p>
-  </div>
+        <div class="progress-container" id="progress-container">
+            <div class="progress" id="progress"></div>
+        </div>
 
-  <div class="formula-group">
-    <h2>Qisqa ko'paytirish / Сокращённое умножение</h2>
-    <p>
-      $a^{2}-b^{2}=(a-b)(a+b)$<br>
-      $(a\pm b)^{2}=a^{2}\pm2ab+b^{2};$<br>
-      $(a\pm b)^{3}=a^{3}\pm3a^{2}b+3ab^{2}\pm b^{3};$<br>
-      $a^{3}\pm b^{3}=(a\pm b)(a^{2}\mp ab+b^{2});$<br>
-      $a^{n}-b^{n}=(a-b)(a^{n-1}+a^{n-2}b+...+ab^{n-2}+b^{n-1});$<br>
-      $a^{2n}\pm b^{2n}=(a\pm b)(a^{2n-1}\mp a^{2n-2}b+...+ab^{2n-2}\mp b^{2n-1});$<br>
-      $a^{2n+1}\pm b^{2n+1}=(a\pm b)(a^{2n}\mp a^{2n-1}b+...\mp ab^{2n-1}+b^{2n});$<br>
-      $(a+b)^{n}=a^{n}+na^{n-1}b+\frac{n(n-1)}{2!}a^{n-2}b^{2}+...+\frac{n(n-1)(n-2)\cdot...\cdot(n-(k-1))}{k!}a^{n-k}b^{k}+...+nab^{n-1}+b^{n}.$
-    </p>
-  </div>
+        <div class="controls">
+            <button id="prev">⏮</button>
+            <button class="play-btn" id="play">▶</button>
+            <button id="next">⏭</button>
+        </div>
 
-  <div class="formula-group">
-    <h2>Progressiya / Прогрессии</h2>
-    <p>
-      <strong>Arifmetik progressiya / Арифметическая прогрессия:</strong><br>
-      $a_{n}=a_{n-1}+d=a_{1}+(n-1)d;$<br>
-      $a_{n}=\frac{a_{n-k}+a_{n+k}}{2}, 1\le k\le n-1;$<br>
-      $S_{n}=\frac{a_{1}+a_{n}}{2}\cdot n=\frac{2a_{1}+d(n-1)}{2}\cdot n.$<br><br>
-      <strong>Geometrik progressiya / Геометрическая прогрессия:</strong><br>
-      $b_{n}=b_{1}q^{n-1}; \quad b_{n}^{2}=b_{n-m}\cdot b_{n+m}$<br>
-      $S_{n}=\frac{b_{1}(1-q^{n})}{1-q}, |q| > 1; \quad S=\frac{b_{1}}{1-q}, |q| < 1$
-    </p>
-  </div>
+        <div class="playlist-container" id="playlist">
+            </div>
 
-  <div class="formula-group">
-    <h2>Logarifmlar / Логарифмы</h2>
-    <p>
-      $log_{a}1=0; \quad log_{a}(x_{1}\cdot x_{2})=log_{a}|x_{1}|+log_{a}|x_{2}|;$<br>
-      $log_{a}\frac{x_{1}}{x_{2}}=log_{a}|x_{1}|-log_{a}|x_{2}|; \quad log_{a^{q}}x^{p}=\frac{p}{q}\cdot log_{a}x$<br>
-      $log_{a}b=\frac{log_{c}b}{log_{c}a}; \quad log_{a}b=\frac{1}{log_{b}a}; \quad lg10^{n}=n; \quad ln~e^{n}=n.$
-    </p>
-  </div>
+        <audio id="audio"></audio>
+    </div>
 
-  <div class="formula-group">
-    <h2>Daraja va ildiz / Степени и корни</h2>
-    <p>
-      $a^{m}\cdot a^{n}=a^{m+n}; \quad a^{m}:a^{n}=a^{m-n}; \quad (a^{m})^{n}=a^{mn};$<br>
-      $(a\cdot b)^{n}=a^{n}\cdot b^{n}; \quad (\frac{a}{b})^{n}=\frac{a^{n}}{b^{n}}; \quad a^{-n}=\frac{1}{a^{n}};$<br>
-      $(\frac{a^{n}}{b^{m}})^{-k}=(\frac{b^{m}}{a^{n}})^{k}; \quad (-a)^{2n}=a^{2n}; \quad (-a)^{2n+1}=-a^{2n+1};$<br>
-      $a\ne0, b\ne0, n,m\in N;$<br>
-      $\sqrt[n]{a^{k}}=a^{\frac{k}{n}}; \quad \sqrt[n]{a^{k}\cdot b^{m}}=\sqrt[n]{a^{k}}\cdot\sqrt[n]{b^{m}}; \quad \sqrt[n]{\frac{a^{k}}{b^{m}}}=\frac{\sqrt[n]{a^{k}}}{\sqrt[n]{b^{m}}}, b\ne0;$<br>
-      $(\sqrt[n]{a^{m}})^{k}=\sqrt[n]{a^{mk}}; \quad \sqrt[n]{\sqrt[k]{a}}=\sqrt[nk]{a}; \quad a^{-\frac{m}{n}}=\frac{1}{\sqrt[n]{a^{m}}}, a\ne0;$<br>
-      $\sqrt[n]{a^{k}}=\sqrt[nm]{a^{km}}; \quad \sqrt[m]{a^{k}}\cdot\sqrt[n]{b^{p}}=\sqrt[nm]{a^{nk}\cdot b^{pm}};$<br>
-      $\sqrt{a^{2}}=|a| = \begin{cases}a, a\ge0\\ -a, a<0\end{cases}$
-    </p>
-  </div>
+    <script>
+        // === АВТОМАТИЧЕСКАЯ ГЕНЕРАЦИЯ ПЛЕЙЛИСТА (от 1.mp3 до 500.mp3) ===
+        const songs = [];
+        for (let i = 1; i <= 500; i++) {
+            songs.push(`${i}.mp3`);
+        }
 
-  <div class="formula-group">
-    <h2>Hosilaga doir formulalar / Таблица производных</h2>
-    <p>
-      $(x^{a})^{\prime}=ax^{a-1}; \quad (a^{x})^{\prime}=a^{x}ln~a; \quad (e^{x})^{\prime}=e^{x};$<br>
-      $(log_{a}x)^{\prime}=\frac{1}{x~ln~a}; \quad (ln~x)^{\prime}=\frac{1}{x};$<br>
-      $(sin~x)^{\prime}=cos~x; \quad (cos~x)^{\prime}=-sin~x;$<br>
-      $(tg~x)^{\prime}=\frac{1}{cos^{2}x}; \quad (ctg~x)^{\prime}=-\frac{1}{sin^{2}x};$
-    </p>
-  </div>
-</div>
+        // Элементы DOM
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('play');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const title = document.getElementById('title');
+        const progressContainer = document.getElementById('progress-container');
+        const progress = document.getElementById('progress');
+        const playlistContainer = document.getElementById('playlist');
+        const art = document.getElementById('art');
 
-<div class="page">
-  <div class="header">Matematika va Geometriya / Математика и Геометрия</div>
+        let songIndex = 0;
+        let isPlaying = false;
 
-  <div class="formula-group">
-    <h2>Hosilaning xossalari / Свойства производных</h2>
-    <p>
-      $y=f(x_{0})+f^{\prime}(x_{0})(x-x_{0});$ (Urinma / Касательная)<br>
-      $y=f(x_{0})-\frac{1}{f^{\prime}(x_{0})}(x-x_{0}).$ (Normal / Нормаль)<br>
-      $(u(x)\pm v(x))^{\prime}=u^{\prime}(x)\pm v^{\prime}(x);$<br>
-      $(k\cdot u(x))^{\prime}=k\cdot u^{\prime}(x), (k=const)$<br>
-      $(u(x)\cdot v(x))^{\prime}=u^{\prime}(x)\cdot v(x)+u(x)\cdot v^{\prime}(x)$<br>
-      $(\frac{u(x)}{v(x)})^{\prime}=\frac{u^{\prime}(x)\cdot v(x)-u(x)\cdot v^{\prime}(x)}{(v(x))^{2}}.$
-    </p>
-  </div>
+        // Инициализация плеера
+        function initPlayer() {
+            renderPlaylist();
+            loadSong(songs[songIndex]);
+        }
 
-  <div class="formula-group">
-    <h2>Integrallar / Интегралы</h2>
-    <p>
-      $\int k\cdot f(x)dx=k\cdot \int f(x)dx;$<br>
-      $\int(f(x)+g(x))dx=\int f(x)dx+\int g(x)dx$<br>
-      $\int_{a}^{b}f(x)dx=F(x)|_{a}^{b}=F(b)-F(a);$<br>
-      $\int_{a}^{b}f(x)dx=\int_{a}^{c}f(x)dx+\int_{c}^{b}f(x)dx, a\le c\le b$<br>
-      $\int x^{m}dx=\frac{x^{m+1}}{m+1}+C; \quad \int\frac{dx}{x}=ln|x|+C;$<br>
-      $\int e^{x}dx=e^{x}+C; \quad \int a^{x}dx=\frac{a^{x}}{ln~a}+C;$<br>
-      $\int sin~x~dx=-cos~x+C; \quad \int cos~x~dx=sin~x+C.$
-    </p>
-  </div>
+        // Загрузка трека
+        function loadSong(song) {
+            title.innerText = `Трек ${song.replace('.mp3', '')}`; // Будет писать "Трек 1", "Трек 2"
+            audio.src = song;
+            updatePlaylistActiveItem();
+            
+            // Прокручиваем плейлист к активному треку
+            const activeItem = document.querySelectorAll('.playlist-item')[songIndex];
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
 
-  <div class="formula-group">
-    <h2>O'rta qiymatlar / Средние значения</h2>
-    <p>
-      <strong>O'rta arifmetik / Среднее арифметическое:</strong><br>
-      $A=\frac{a_{1}+a_{2}+a_{3}+...+a_{n}}{n};$<br>
-      <strong>O'rta geometrik / Среднее геометрическое:</strong><br>
-      $G=\sqrt[n]{a_{1}\cdot a_{2}\cdot a_{3}\cdot...\cdot a_{n}}.$
-    </p>
-  </div>
+        // Воспроизведение
+        function playSong() {
+            isPlaying = true;
+            playBtn.innerHTML = "⏸";
+            playBtn.style.paddingLeft = "0"; 
+            art.classList.add('playing');
+            
+            // Если файла нет, выдаст предупреждение в консоль и попробует включить следующий
+            audio.play().catch(e => {
+                console.warn(`Файл ${songs[songIndex]} не найден или заблокирован браузером.`);
+                // Раскомментируйте строчку ниже, если хотите, чтобы плеер сам листал пустые файлы
+                // nextSong(); 
+            });
+        }
 
-  <div class="formula-group">
-    <h2>Trigonometrik ayniyatlar / Основные тождества</h2>
-    <p>
-      $sin^{2}\alpha+cos^{2}\alpha=1$<br>
-      $tg~\alpha=\frac{sin~\alpha}{cos~\alpha}; \quad ctg~\alpha=\frac{cos~\alpha}{sin~\alpha}$<br>
-      $tg^{2}\alpha+1=\frac{1}{cos^{2}\alpha}; \quad ctg^{2}\alpha+1=\frac{1}{sin^{2}\alpha}$
-    </p>
-  </div>
+        // Пауза
+        function pauseSong() {
+            isPlaying = false;
+            playBtn.innerHTML = "▶";
+            playBtn.style.paddingLeft = "4px";
+            art.classList.remove('playing');
+            audio.pause();
+        }
 
-  <div class="formula-group">
-    <h2>Trigonometrik funksiyalar / Значения тригонометрических функций</h2>
-    <table>
-      <tr><th>$\alpha$</th><th>$0$</th><th>$\frac{\pi}{6}$</th><th>$\frac{\pi}{4}$</th><th>$\frac{\pi}{3}$</th><th>$\frac{\pi}{2}$</th></tr>
-      <tr><td>$\sin \alpha$</td><td>$0$</td><td>$\frac{1}{2}$</td><td>$\frac{\sqrt{2}}{2}$</td><td>$\frac{\sqrt{3}}{2}$</td><td>$1$</td></tr>
-      <tr><td>$\cos \alpha$</td><td>$1$</td><td>$\frac{\sqrt{3}}{2}$</td><td>$\frac{\sqrt{2}}{2}$</td><td>$\frac{1}{2}$</td><td>$0$</td></tr>
-    </table>
-  </div>
+        // Предыдущий трек
+        function prevSong() {
+            songIndex--;
+            if (songIndex < 0) {
+                songIndex = songs.length - 1;
+            }
+            loadSong(songs[songIndex]);
+            if (isPlaying) playSong();
+        }
 
-  <div class="formula-group">
-    <h2>To'g'ri burchakli uchburchak / Прямоугольный треугольник</h2>
-    <p>
-      $a^{2}+b^{2}=c^{2};$<br>
-      $a=c\cdot \sin \alpha; \quad b=c\cdot \cos \alpha; \quad a=b\cdot \tg \alpha$
-    </p>
-  </div>
+        // Следующий трек
+        function nextSong() {
+            songIndex++;
+            if (songIndex > songs.length - 1) {
+                songIndex = 0;
+            }
+            loadSong(songs[songIndex]);
+            if (isPlaying) playSong();
+        }
 
-  <div class="formula-group">
-    <h2>Ixtiyoriy uchburchak / Произвольный треугольник</h2>
-    <p>
-      $S=\frac{1}{2}ab \sin \gamma$<br>
-      $S=\sqrt{p(p-a)(p-b)(p-c)}$ (Geron formulasi)<br>
-      $p=\frac{1}{2}(a+b+c); \quad S=\frac{1}{2}a\cdot h_{a}$<br>
-      $\frac{\sin \alpha}{a}=\frac{\sin \beta}{b}=\frac{\sin \gamma}{c}$<br>
-      $a^{2}=b^{2}+c^{2}-2bc \cos \alpha.$
-    </p>
-  </div>
+        // Обновление прогресс-бара
+        function updateProgress(e) {
+            const { duration, currentTime } = e.srcElement;
+            if (duration) {
+                const progressPercent = (currentTime / duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+            }
+        }
 
-  <div class="formula-group">
-    <h2>Aylana va doira / Окружность и круг</h2>
-    <p>
-      $R=\frac{a}{2 \sin \alpha}=\frac{b}{2 \sin \beta}=\frac{c}{2 \sin \gamma}.$<br>
-      $r=\frac{2S}{a+b+c} ; \quad R=\frac{abc}{4S}$<br>
-      $l=2\pi R; \quad S=\pi R^{2}$<br>
-      $S_{sek}=\frac{\pi R^{2}}{360}\cdot \alpha; \quad S_{segm}=\frac{R^{2}}{2}(\alpha-\sin \alpha).$
-    </p>
-  </div>
-</div>
+        // Перемотка кликом по прогресс-бару
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        }
 
-<div class="page">
-  <div class="header">Geometriya va Fizika / Геометрия и Физика</div>
+        // Отрисовка плейлиста
+        function renderPlaylist() {
+            playlistContainer.innerHTML = '';
+            songs.forEach((song, index) => {
+                const item = document.createElement('div');
+                item.classList.add('playlist-item');
+                item.innerText = `Трек ${song.replace('.mp3', '')}`;
+                
+                // Клик по треку в плейлисте
+                item.addEventListener('click', () => {
+                    songIndex = index;
+                    loadSong(songs[songIndex]);
+                    playSong();
+                });
+                
+                playlistContainer.appendChild(item);
+            });
+        }
 
-  <div class="formula-group">
-    <h2>Vektorlar / Векторы</h2>
-    <p>
-      $|\vec{a}|=\sqrt{x^{2}+y^{2}+z^{2}}$ — $\vec{a}(x,y,z)$ vektorning uzunligi / длина вектора<br>
-      $\vec{a}\cdot\vec{b}=|\vec{a}|\cdot|\vec{b}|\cdot \cos \varphi$ — skalar ko'paytma / скалярное произведение<br>
-      $\vec{a}\cdot \vec{b}=x_{1}\cdot x_{2}+y_{1}\cdot y_{2};$ — $\vec{a}(x_{1};y_{1})$ va $\vec{b}(x_{2};y_{2})$ skalar ko'paytmasi<br>
-      $\vec{a}\cdot\lambda=\vec{c}(x\cdot\lambda; y\cdot\lambda; z\cdot\lambda)$
-    </p>
-  </div>
+        // Подсветка текущего трека в списке
+        function updatePlaylistActiveItem() {
+            const items = document.querySelectorAll('.playlist-item');
+            items.forEach(item => item.classList.remove('active'));
+            if(items[songIndex]) {
+                items[songIndex].classList.add('active');
+            }
+        }
 
-  <div class="formula-group">
-    <h2>To'rtburchaklar yuzlari / Площади четырёхугольников</h2>
-    <ul>
-      <li><strong>Parallelogramm / параллелограмм:</strong> $S=a\cdot h_{a}$ yoki $S=a\cdot b\cdot \sin \alpha$</li>
-      <li><strong>Romb / ромб:</strong> $S=\frac{1}{2}\cdot d_{1}\cdot d_{2}$ yoki $S=a^{2}\cdot \sin \alpha$</li>
-      <li><strong>Trapetsiya / трапеция:</strong> $S=\frac{a+b}{2}\cdot h$</li>
-    </ul>
-  </div>
+        // Слушатели событий
+        playBtn.addEventListener('click', () => {
+            isPlaying ? pauseSong() : playSong();
+        });
 
-  <div class="formula-group">
-    <h2>Stereometriya / Стереометрия</h2>
-    <ul>
-      <li><strong>Prizma / призма:</strong> $V=SH$</li>
-      <li><strong>Piramida / пирамида:</strong> $V=\frac{1}{3}SH$</li>
-      <li><strong>Kesik piramida / усечённая пирамида:</strong> $V=\frac{1}{3}h(S_{1}+\sqrt{S_{1}\cdot S_{2}}+S_{2})$</li>
-      <li><strong>Silindr / цилиндр:</strong> $S_{yon}=2\pi RH$, $V=\pi R^{2}H$</li>
-      <li><strong>Konus / конус:</strong> $S_{yon}=\pi Rl$, $V=\frac{1}{3}\pi R^{2}H$</li>
-      <li><strong>Kesik konus / усеченный конус:</strong> $V=\frac{1}{3}\pi h(R_{1}^{2}+R_{1}\cdot R_{2}+R_{2}^{2})$</li>
-      <li><strong>Shar / шар:</strong> $S=4\pi R^{2}$, $V=\frac{4}{3}\pi R^{3}$</li>
-      <li><strong>Shar segmenti hajmi / объём шарового сегмента:</strong> $V=\pi H^{2}(R-\frac{H}{3})$</li>
-      <li><strong>Shar segmenti sirti / площадь поверхности сегмента:</strong> $S=2\pi RH$</li>
-    </ul>
-  </div>
+        prevBtn.addEventListener('click', prevSong);
+        nextBtn.addEventListener('click', nextSong);
+        audio.addEventListener('timeupdate', updateProgress);
+        progressContainer.addEventListener('click', setProgress);
+        audio.addEventListener('ended', nextSong);
 
-  <div class="formula-group">
-    <h2>Mexanika / Mеханика</h2>
-    <p>
-      $\nu=\frac{\Delta s}{\Delta t}; \quad a=\frac{\Delta\upsilon}{\Delta t}; \quad s=\nu_{0}t+\frac{at^{2}}{2}$<br>
-      $\omega=\frac{\Delta\varphi}{\Delta t}; \quad \epsilon=\frac{\Delta\omega}{\Delta t}; \quad \varphi=\omega_{0}t+\frac{\epsilon t^{2}}{2};$<br>
-      $\omega=2\pi\nu; \quad \upsilon=\omega r; \quad \nu\cdot T=1; \quad \upsilon=\upsilon_{0}\pm gt;$<br>
-      $\upsilon_{0x}=\upsilon_{0}\cdot \cos \alpha; \quad \upsilon_{0y}=\upsilon_{0}\cdot \sin \alpha;$<br>
-      $h=\upsilon_{0}t\pm\frac{gt^{2}}{2}; \quad t_{u}=\frac{2\upsilon_{0y}}{g}; \quad h_{max}=\frac{\upsilon_{0y}^{2}}{2g}; \quad s=\upsilon_{0x}\cdot t_{u}$<br>
-      $\vec{a}=\vec{a}_{\tau}+\vec{a}_{n}; \quad a_{n}=\frac{\upsilon^{2}}{r}; \quad m=\rho V; \quad \vec{a}=\frac{\vec{F}}{m};$<br>
-      $\vec{F}_{1}=-\vec{F}_{2}; \quad F_{el}=-k\Delta l; \quad a=g(\sin \alpha\pm\mu \cos \alpha);$<br>
-      $\vec{p}=m\vec{\upsilon}; \quad \vec{F}\Delta t=\Delta\vec{p}; \quad E_{k}=\frac{m\upsilon^{2}}{2}$<br>
-      $N=\frac{A}{t}=\vec{F}\cdot\vec{\upsilon}; \quad A=F\cdot S\cdot \cos \alpha; \quad E_{p}=mgh; \quad E_{k}+E_{p}=const;$<br>
-      $M=Fl; \quad F_{1}l_{1}=F_{2}l_{2}; \quad F_{ish}=\mu N; \quad \vec{P}=m(\vec{g}-\vec{a});$<br>
-      $g=\frac{GM}{R^{2}}; \quad \upsilon_{1}=\sqrt{gR}; \quad \upsilon_{11}=\sqrt{2gR}; \quad x=A\cdot \sin(\omega t+\varphi_{0});$<br>
-      $\upsilon=x^{\prime}=A\omega \cos(\omega t+\varphi_{0}); \quad a=\upsilon^{\prime}=-x\cdot\omega^{2};$<br>
-      $\upsilon=\lambda\nu; \quad \upsilon=\sqrt{\frac{E}{\rho}}; \quad \upsilon=\sqrt{\frac{T}{\rho_{ch}}};$<br>
-      $\omega=\sqrt{\frac{k}{m}}; \quad T=2\pi\sqrt{\frac{m}{k}}; \quad T=2\pi\sqrt{\frac{l}{g}}; \quad \omega=\sqrt{\frac{g}{l}};$
-    </p>
-  </div>
-</div>
-
-<div class="page">
-  <div class="header">Fizika fanidan asosiy formulalar / Основные формулы физики</div>
-
-  <div class="formula-group">
-    <h2>Molekulyar fizika / Молекулярная физика</h2>
-    <p>
-      $\nu=\frac{N}{N_{A}}=\frac{m}{M}; \quad \rho=nm_{0}; \quad n=\frac{N}{V}; \quad \rho=\frac{m}{V}$<br>
-      $d=\sqrt[3]{\frac{VM}{mN_{A}}}; \quad p=\frac{2}{3}n\overline{E}_{k}=\frac{\rho\overline{\upsilon}^{2}}{3}=nkT; \quad \overline{E}_{k}=\frac{m_{0}\overline{\upsilon}^{2}}{2}=\frac{3}{2}kT;$<br>
-      $\overline{\upsilon}=\sqrt{\frac{3RT}{\mu}}=\sqrt{\frac{3kT}{m_{0}}}; \quad pV=\nu RT; \quad p=\frac{\rho}{M}RT; \quad \frac{pV}{T}=const;$<br>
-      $A=p\Delta V; \quad \Delta U=\frac{3}{2}(p_{2}V_{2}-p_{1}V_{1})=\frac{3}{2}\nu R\Delta T;$<br>
-      $T=t+273; \quad Q=A+\Delta U; \quad C=\frac{Q}{T_{2}-T_{1}}$<br>
-      $c=\frac{Q}{m(T_{2}-T_{1})}; \quad \lambda=\frac{Q}{m}; \quad r=\frac{Q}{m}; \quad q=\frac{Q}{m};$<br>
-      $\eta=\frac{T_{1}-T_{2}}{T_{1}}\cdot 100\%=\frac{Q_{1}-Q_{2}}{Q_{1}}\cdot 100\%; \quad F=\sigma l; \quad \sigma=\frac{F}{S};$<br>
-      $\sigma=E|\epsilon|; \quad W=\frac{E\epsilon^{2}}{2}; \quad \Delta l=l-l_{0}; \quad \epsilon=\frac{\Delta l}{l_{0}}; \quad k=\frac{ES}{l_{0}};$<br>
-      $W=\sigma S; \quad h=\frac{2\sigma}{\rho g r}; \quad \Delta p=\frac{2\sigma}{R}$<br>
-      $F_{A}=\rho_{s}V_{b}g; \quad p=\rho gh; \quad S_{1}\upsilon_{1}=S_{2}\upsilon_{2};$<br>
-      $V_{b}=\frac{\rho_{j}V_{j}}{\rho_{s}}; \quad p+\frac{\rho\upsilon^{2}}{2}+\rho gh=const.$
-    </p>
-  </div>
-
-  <div class="formula-group">
-    <h2>Elektr va magnetizm / Электричество и магнетизм</h2>
-    <p>
-      $F=\frac{k|qQ|}{\epsilon r^{2}}; \quad E=\frac{k|Q|}{\epsilon r^{2}}; \quad \varphi=\frac{kQ}{\epsilon r}; \quad W_{p}=q\varphi;$<br>
-      $E=\frac{\varphi_{1}-\varphi_{2}}{d}; \quad A=q(\varphi_{1}-\varphi_{2}); \quad W_{el}=\frac{qU}{2}; \quad C=\frac{\epsilon\epsilon_{0}S}{d};$<br>
-      $W=\frac{\epsilon\epsilon_{0}E^{2}}{2}; \quad C_{p}=C_{1}+C_{2}+...+C_{N}; \quad \frac{1}{C_{k-k}}=\frac{1}{C_{1}}+\frac{1}{C_{2}}+...+\frac{1}{C_{N}};$<br>
-      $q=CU; \quad F=qE; \quad E=\frac{U}{d}=\frac{\sigma}{\epsilon\epsilon_{0}}$<br>
-      $I=\frac{U}{R}; \quad Q=I^{2}Rt; \quad P=IU; \quad I=ne\overline{\upsilon}S; \quad j=\frac{I}{S};$<br>
-      $q=It; \quad E=\rho j; \quad R=\frac{\rho l}{S}; \quad R=R_{0}(1+\alpha\Delta t);$<br>
-      $R_{k-k}=R_{1}+R_{2}+...R_{N}; \quad \frac{1}{R_{p}}=\frac{1}{R_{1}}+\frac{1}{R_{2}}+...+\frac{1}{R_{N}};$<br>
-      $\eta=\frac{R}{R+r}=\frac{U}{\epsilon}; \quad \epsilon=\frac{A_{chet}}{q}; \quad I=\frac{\epsilon}{R+r}; \quad I_{a}=kU^{3/2};$<br>
-      $T=2\pi\sqrt{LC}; \quad \omega=\frac{1}{\sqrt{LC}}; \quad W=\frac{q^{2}}{2C}+\frac{L\cdot I^{2}}{2};$<br>
-      $Z=\sqrt{R^{2}+(\omega L-\frac{1}{\omega C})^{2}}; \quad I=\frac{U}{Z}; \quad \cos \varphi=\frac{R}{Z}; \quad P=I^{2}R=IU \cos \varphi;$<br>
-      $I=\frac{I_{0}}{\sqrt{2}}; \quad U=\frac{U_{0}}{\sqrt{2}}; \quad B=\frac{\mu_{0}I}{2\pi R}; \quad B=\frac{\mu_{0}I}{2R}; \quad F=\frac{\mu_{0}I_{1}I_{2}}{2\pi d}l;$<br>
-      $F_{A}=IBl \sin \alpha; \quad F_{L}=q\upsilon B \sin \alpha; \quad R=\frac{m\upsilon}{qB}; \quad T=\frac{2\pi m}{qB}; \quad \omega=\frac{qB}{m}$<br>
-      $\Phi=NBS \cos \alpha; \quad \Phi=LI; \quad W=\frac{I\Phi}{2}=\frac{LI^{2}}{2}; \quad \epsilon=-\frac{\Delta\Phi}{\Delta t}=-L\frac{\Delta I}{\Delta t}.$
-    </p>
-  </div>
-
-  <div class="formula-group">
-    <h2>Optika. Kvant va Yadro fizikasi / Оптика. Квантовая и ядерная физика</h2>
-    <p>
-      $n=\frac{c}{\upsilon}=\sqrt{\epsilon\mu}; \quad k=\frac{f}{d}; \quad \frac{\sin \alpha}{\sin \beta}=\frac{n_{2}}{n_{1}}; \quad \pm\frac{1}{F}=\frac{1}{d}\pm\frac{1}{f}; \quad D=\pm\frac{1}{F};$<br>
-      $d\cdot \sin \alpha=n\lambda; \quad \lambda_{m}=\frac{b}{T}; \quad I=\frac{I_{0}}{2}; \quad I=I_{0}\cos^{2}\alpha;$<br>
-      $E=\frac{\Phi}{S}=\frac{I}{R^{2}}\cos \varphi; \quad E=h\nu; \quad p=\frac{h\nu}{c}=\frac{h}{\lambda}; \quad I=\frac{N}{S\cdot t}h\nu;$<br>
-      $h\nu=A+E_{k max}; \quad E_{k max}=eU_{yep}; \quad h\nu_{min}=\frac{hc}{\lambda_{max}}=A;$<br>
-      $E_{n}=\frac{E_{1}}{n^{2}}; \quad E_{1}=-13,6 eV; \quad h\nu=E_{n}-E_{m}; \quad m_{e}\upsilon_{n}r_{n}=n\hbar;$<br>
-      $r_{n}=n^{2}r_{B}; \quad E_{bog'}=\Delta mc^{2}; \quad E_{sol}=\frac{E_{bog'}}{A}; \quad A=-\frac{dN}{dt};$<br>
-      $N=N_{0}e^{-\lambda t}=N_{0}2^{-t/T}; \quad \lambda T=\ln 2\approx0,7;$<br>
-      $\tau=\frac{\tau_{0}}{\sqrt{1-\upsilon^{2}/c^{2}}}; \quad l=l_{0}\sqrt{1-\upsilon^{2}/c^{2}}; \quad \upsilon_{2}=\frac{\upsilon_{1}\pm\upsilon}{1\pm\upsilon_{1}\upsilon/c^{2}};$<br>
-      $m=\frac{m_{0}}{\sqrt{1-\upsilon^{2}/c^{2}}}; \quad E_{0}=m_{0}c^{2}; \quad E=mc^{2};$<br>
-      $\vec{p}=m\vec{\upsilon}; \quad E_{k}=(m-m_{0})c^{2}; \quad E^{2}-c^{2}p^{2}=m_{0}^{2}c^{4}.$
-    </p>
-  </div>
-</div>
-
-<div class="page">
-  <div class="header">Doimiylar va shartli belgilar / Физические постоянные и обозначения</div>
-
-  <div class="formula-group">
-    <h2>Fizik doimiylar / Физические постоянные</h2>
-    <p>
-      Yer sirti yaqinida erkin tushish tezlanishi / ускорение свободного падения: $g \approx 10~m/s^{2}$<br>
-      Gravitatsiya doimiysi / гравитационная постоянная: $G=\frac{20}{3}\cdot10^{-11}~N\cdot m^{2}/kg^{2}$<br>
-      Universal gaz doimiysi / универсальная газовая постоянная: $R=8,31~J/(mol\cdot K)$<br>
-      Bolsman doimiysi / постоянная Больцмана: $k=1,38\cdot10^{-23}~J/K$<br>
-      Avogadro soni / число Авогадро: $N_{A}=6\cdot10^{23}~mol^{-1}$<br>
-      Elementar zaryad / элементарный заряд: $e=1,6\cdot10^{-19}~C$<br>
-      Kulon qonuni koeffitsiyenti / коэффициент пропорциональности: $k=9\cdot10^{9}~N\cdot m^{2}/C^{2}$<br>
-      Elektr doimiysi / электрическая постоянная: $\epsilon_{0}=8,85\cdot10^{-12}~F/m$<br>
-      Magnit doimiysi / магнитная постоянная: $\mu_{0}=4\pi\cdot10^{-7}~N/A^{2}$<br>
-      Yorug'likning vakuumdagi tezligi / скорость света в вакууме: $c=3\cdot10^{8}~m/s$<br>
-      Plank doimiysi / постоянная Планка: $h=4,125\cdot10^{-15}~eV\cdot s=6,6\cdot10^{-34}~J\cdot s$
-    </p>
-  </div>
-
-    <div class="formula-group">
-    <h2>Zichlik / Плотность ($kg/m^{3}$)</h2>
-    <table>
-      <tr><th>Modda / Вещество</th><th>$\rho$</th><th>Modda / Вещество</th><th>$\rho$</th></tr>
-      <tr><td>benzin / бензин</td><td>$700$</td><td>alyuminiy / алюминий</td><td>$2700$</td></tr>
-      <tr><td>kerosin / керосин</td><td>$800$</td><td>muz / лед</td><td>$900$</td></tr>
-      <tr><td>suv (4°C) / вода (4°C)</td><td>$1000$</td><td>mis / медь</td><td>$8900$</td></tr>
-      <tr><td>spirt / спирт</td><td>$800$</td><td>po'lat / сталь</td><td>$7800$</td></tr>
-      <tr><td>simob / ртуть</td><td>$13600$</td><td>temir / железо</td><td>$7800$</td></tr>
-    </table>
-  </div>
-
-  <div class="formula-group">
-    <h2>Molyar massa / Молярная масса ($g/mol$)</h2>
-    <table>
-      <tr><th>Modda / Вещество</th><th>Formula</th><th>$M$</th><th>Modda / Вещество</th><th>Formula</th><th>$M$</th></tr>
-      <tr><td>argon / аргон</td><td>$Ar$</td><td>$40$</td><td>karbonat angidrid / двуокись углерода</td><td>$CO_{2}$</td><td>$44$</td></tr>
-      <tr><td>azot / азот</td><td>$N_{2}$</td><td>$28$</td><td>mis / медь</td><td>$Cu$</td><td>$64$</td></tr>
-      <tr><td>geliy / гелий</td><td>$He$</td><td>$4$</td><td>alyuminiy / алюминий</td><td>$Al$</td><td>$27$</td></tr>
-      <tr><td>neon / неон</td><td>$Ne$</td><td>$20$</td><td>kislorod / кислород</td><td>$O_{2}$</td><td>$32$</td></tr>
-      <tr><td>havo / воздух</td><td></td><td>$29$</td><td>vodorod / водород</td><td>$H_{2}$</td><td>$2$</td></tr>
-      <tr><td>suv / вода</td><td>$H_{2}O$</td><td>$18$</td><td></td><td></td><td></td></tr>
-    </table>
-  </div>
-  
-  <div class="formula-group">
-    <h2>O'nli old qo'shimchalar / Десятичные приставки</h2>
-    <table>
-      <tr><th>Обозначение</th><th>Приставка</th><th>Множитель</th><th>Обозначение</th><th>Приставка</th><th>Множитель</th></tr>
-      <tr><td>T</td><td>tera / тера</td><td>$10^{12}$</td><td>c</td><td>santi / санти</td><td>$10^{-2}$</td></tr>
-      <tr><td>G</td><td>giga / гига</td><td>$10^{9}$</td><td>m</td><td>milli / милли</td><td>$10^{-3}$</td></tr>
-      <tr><td>M</td><td>mega / мега</td><td>$10^{6}$</td><td>μ</td><td>mikro / микро</td><td>$10^{-6}$</td></tr>
-      <tr><td>k</td><td>kilo / кило</td><td>$10^{3}$</td><td>n</td><td>nano / нано</td><td>$10^{-9}$</td></tr>
-      <tr><td>d</td><td>detsi / деци</td><td>$10^{-1}$</td><td>p</td><td>piko / пико</td><td>$10^{-12}$</td></tr>
-    </table>
-  </div>
-
-  <div class="formula-group">
-    <h2>Solishtirma xossalar / Удельные свойства</h2>
-    <p>
-      <strong>Solishtirma issiqlik sig'imi / Удельная теплоемкость ($J/(kg\cdot K)$):</strong><br>
-      alyuminiy/алюминий: 900 | mis/медь: 380 | muz/лед: 2100 | oltin/золото: 120 | suv/вода: 4200 | temir/железо: 450<br><br>
-      <strong>O'tkazgichlarning solishtirma qarshiligi / Удельное сопротивление ($10^{-8}\Omega\cdot m$):</strong><br>
-      mis/медь: 1,7 | alyuminiy/алюминий: 2,8 | volfram/вольфрам: 5,5 | temir/железо: 9,8 | nixrom/нихром: 110<br><br>
-      <strong>Solishtirma issiqlik / Удельная теплота:</strong><br>
-      Erish (muz) / плавления (лёд): $330 \cdot 10^{3} J/kg$ <br>
-      Bug'lanish (suv) / испарения (вода): $2,3 \cdot 10^{6} J/kg$
-    </p>
-  </div>
-
-  <div class="formula-group">
-    <h2>Boshqa ko'rsatkichlar / Другие показатели</h2>
-    <p>
-      <strong>Nur sindirish ko'rsatkichi / Показатель преломления:</strong><br>
-      Suv / вода: $4/3$ | Shisha / стекло: $1,5$ | Yoqut / рубин: $1,76$ | Olmos / алмаз: $2,42$<br><br>
-      <strong>Yoqilg'i yonish issiqligi / Удельная теплотворность горючего ($10^{6} J/kg$):</strong><br>
-      benzin/бензин: 46 | neft/нефть: 44 | gaz/газ: 44 | toshko'mir/каменный уголь: 29 | yog'och/дерево: 10<br><br>
-      <strong>Sirt taranglik koeffitsiyenti / Коэффициент поверхностного натяжения ($10^{-3} N/m$):</strong><br>
-      benzin/бензин: 21 | kerosin/керосин: 24 | suv/вода: 73 | spirt/спирт: 22 | sovun/мыло: 40 | simob/ртуть: 510<br><br>
-      <strong>Normal sharoit / Нормальные условия:</strong><br>
-      Bosim / давление: $10^{5} Pa$ | Temperatura / температура: $0^\circ C$<br><br>
-      <strong>Ayrim munosabatlar / Соотношения между единицами:</strong><br>
-      $0^\circ C = 273 K$ | $1~mm~Hg = 133,3~Pa$
-    </p>
-  </div>
-</div>
-
+        // Запуск
+        initPlayer();
+    </script>
 </body>
 </html>
+
+      
